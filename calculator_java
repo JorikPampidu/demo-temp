@@ -1,0 +1,147 @@
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.print("Введите арифметическое выражение: ");
+            String input = scanner.nextLine();
+            String result = calc(input);
+            System.out.println("Результат: " + result);
+        }
+    }
+
+    public static String calc(String input) {
+        try {
+            // Разбиение введенного выражения на составляющие: операнды и оператор
+            //Метод принимает входную строку input, представляющую арифметическое выражение в формате "число оператор число".
+            String[] parts = input.toUpperCase().split(" ");;//Входная строка разбивается на три части: первое число, оператор и второе число, с помощью метода split(" ").
+            if (parts.length != 3) {
+                throw new IllegalArgumentException("Неверный формат ввода");//Если количество частей не равно 3, выбрасывается исключение IllegalArgumentException.
+            }
+
+            String operand1 = parts[0];
+            String operator = parts[1];
+            String operand2 = parts[2];
+
+            //Метод определяет, являются ли числа римскими или арабскими с помощью методов isRomanNumeral и isNumeric.
+            boolean isRoman = isRomanNumeral(operand1) && isRomanNumeral(operand2);
+            boolean isArabic = isNumeric(operand1) && isNumeric(operand2);
+
+            if (!isRoman && !isArabic) {
+                throw new IllegalArgumentException("Неверный формат чисел");//Если оба числа не являются ни римскими, ни арабскими, выбрасывается исключение IllegalArgumentException.
+            }
+
+            int num1, num2;
+            if (isRoman) {
+                //Если числа римские, они преобразуются в арабские числа с помощью метода romanToArabic.
+                num1 = romanToArabic(operand1);
+                num2 = romanToArabic(operand2);
+            } else {
+                //  Если числа арабские, они парсятся в целочисленные значения.
+                num1 = Integer.parseInt(operand1);
+                num2 = Integer.parseInt(operand2);
+            }
+            if (num1 < 1 || num1 > 10 || num2 < 1 || num2 > 10) {
+                throw new IllegalArgumentException("Числа должны быть от 1 до 10");
+            }
+
+            int result; //Выполняется операция в зависимости от оператора. Если оператор не является одним из допустимых ("+", "-", "*", "/"), выбрасывается исключение IllegalArgumentException.
+            switch (operator) {
+                case "+":
+                    result = num1 + num2;
+                    break;
+                case "-":
+                    result = num1 - num2;
+                    break;
+                case "*":
+                    result = num1 * num2;
+                    break;
+                case "/":
+                    if (num2 == 0) { //Если оператор "/" и второе число равно нулю, выбрасывается исключение ArithmeticException.
+                        throw new ArithmeticException("Деление на ноль запрещено");
+                    }
+                    result = num1 / num2;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Неверный оператор");
+            }
+            // Возврат результата в виде арабского или римского числа
+            return isRoman ? arabicToRoman(result) : String.valueOf(result);
+            //Если числа были римскими, результат преобразуется обратно в римскую форму с помощью метода arabicToRoman и возвращается в виде строки.
+            //В противном случае результат преобразуется в строку с помощью метода String.valueOf и возвращается
+        } catch (Exception e) { //Если возникает исключение в блоке try, оно обрабатывается и возвращается сообщение об ошибке вместо результата вычислений.
+            return "Ошибка: " + e.getMessage();
+        }
+    }
+
+    private static boolean isRomanNumeral(String input) {
+        // Проверка, является ли входная строка римским числом
+        String romanNumerals = "IVX";//Входная строка input проверяется путем итерации по каждому символу и проверки его наличия в строке римских цифр
+        for (char c : input.toCharArray()) {
+            if (romanNumerals.indexOf(c) == -1) {
+                return false;//Если встречается любой символ, не содержащийся в римских цифрах, метод возвращает false
+            }
+        }
+        return true;//В противном случае, если все символы являются римскими цифрами, метод возвращает true.
+    }
+
+
+    private static boolean isNumeric(String input) {
+        // Проверка, является ли входная строка числом
+        try {
+            Integer.parseInt(input);//Входная строка input пытается преобразоваться в целочисленное значение с помощью метода Integer.parseInt().
+            return true;//Если преобразование проходит успешно, метод возвращает true.
+        } catch (NumberFormatException e) {
+            return false;// Если возникает исключение NumberFormatException, метод возвращает false, что означает, что входная строка не является числом.
+        }
+    }
+
+    private static int romanToArabic(String input) {
+        // Преобразование римского числа в арабское
+        Map<Character, Integer> romanValues = new HashMap<>();//В методе создается объект HashMap, где символам римских цифр сопоставляются их числовые значения.
+        romanValues.put('I', 1);
+        romanValues.put('V', 5);
+        romanValues.put('X', 10);
+        romanValues.put('L', 50);
+        romanValues.put('C', 100);
+
+
+        int result = 0;
+        int prevValue = 0;
+        for (int i = input.length() - 1; i >= 0; i--) { //Входная строка input обрабатывается справа налево. Каждый символ проверяется на соответствие его числовому значению в HashMap.
+            char c = Character.toUpperCase(input.charAt(i));
+            int value = romanValues.get(c);
+            if (value < prevValue) {
+                result -= value; //Если текущее значение меньше предыдущего значения, вычитается текущее значение.
+            } else {
+                result += value; //В противном случае, оно добавляется к результату.
+            }
+            prevValue = value;
+        }
+        return result; //Возвращается арабское число, полученное в результате преобразования
+    }
+    /*
+    */
+    private static String arabicToRoman(int num) {
+        // Преобразование арабского числа в римское
+        if (num < 1) {
+            throw new IllegalArgumentException("Римские числа не могут представлять ноль или отрицательные числа");
+        }
+
+        StringBuilder result = new StringBuilder();
+        int[] arabicValues = {100, 90, 50, 40, 10, 9, 5, 4, 1};
+        String[] romanNumerals = {"C", "XC", "L", "XL", "X", "IX", "V", "IV", "I"};
+
+
+
+        for (int i = 0; i < arabicValues.length; i++) { //Входное число num сравнивается со значениями в массиве arabicValues в порядке убывания.
+            while (num >= arabicValues[i]) {            //При нахождении значения, которое меньше или равно входному числу, римский символ добавляется к результату, а входное число уменьшается на соответствующую величину
+                result.append(romanNumerals[i]);
+                num -= arabicValues[i];
+            }
+        }
+        return result.toString();// Возвращается римское число, полученное в результате преобразования.
+    }
+}
